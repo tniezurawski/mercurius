@@ -67,6 +67,7 @@
 - `queryDepth`: `Integer`. The maximum depth allowed for a single query. _Note: GraphiQL IDE sends an introspection query when it starts up. This query has a depth of 7 so when the `queryDepth` value is smaller than 7 this query will fail with a `Bad Request` error_
 - `validationRules`: `Function` or `Function[]`. Optional additional validation rules that the queries must satisfy in addition to those defined by the GraphQL specification. When using `Function`, arguments include additional data from graphql request and the return value must be validation rules `Function[]`.
 - `subscription`: Boolean | Object. Enable subscriptions. It uses [mqemitter](https://github.com/mcollina/mqemitter) when it is true and exposes the pubsub interface to `app.graphql.pubsub`. To use a custom emitter set the value to an object containing the emitter.
+  - `subscription.path`: `String` Optional. Change default graphql websockets route (see `path` above) to another one.
   - `subscription.emitter`: Custom emitter.
   - `subscription.pubsub`: Custom pubsub, see [Subscriptions with custom PubSub](/docs/subscriptions.md#subscriptions-with-custom-pubsub) for more details. Note that when passing both `emitter` and `pubsub` options, `emitter` will be ignored.
   - `subscription.verifyClient`: `Function` A function which can be used to validate incoming connections.
