@@ -9,6 +9,23 @@ const { makeExecutableSchema } = require('@graphql-tools/schema')
 const SubscriptionConnection = require('../lib/subscription-connection')
 const { PubSub } = require('../lib/subscriber')
 const { GRAPHQL_WS, GRAPHQL_TRANSPORT_WS } = require('../lib/subscription-protocol')
+const { EventEmitter } = require('events')
+
+// Custom capture implementation to replace node-tap's t.capture()
+function capture (obj, methodName) {
+  const original = obj[methodName]
+  const calls = []
+
+  obj[methodName] = function (...args) {
+    calls.push(args)
+    if (typeof original === 'function') {
+      return original.apply(this, args)
+    }
+  }
+
+  obj[methodName].calls = calls
+  return obj[methodName]
+}
 
 test('socket is closed on unhandled promise rejection in handleMessage', t => {
   t.plan(1)
@@ -62,6 +79,45 @@ test('socket is closed on unhandled promise rejection in handleMessage', t => {
       t.equal(handleConnectionCloseCalled, true)
     })
   })
+})
+
+test('subscription connection handles connection close when socket emit close event', async (t) => {
+  const socket = new EventEmitter()
+  socket.protocol = GRAPHQL_TRANSPORT_WS
+  socket.send = () => {}
+  socket.close = () => {}
+  class Mocked extends SubscriptionConnection {
+  }
+  capture(Mocked.prototype, 'handleConnectionClose')
+  // eslint-disable-next-line no-new
+  new Mocked(socket, {})
+  socket.emit('close')
+  t.equal(Mocked.prototype.handleConnectionClose.calls.length, 1)
+})
+
+test('subscription connection handles connection close when socket emit error event', async (t) => {
+  const socket = new EventEmitter()
+  socket.protocol = GRAPHQL_TRANSPORT_WS
+  socket.send = () => {}
+  socket.close = () => {}
+  class Mocked extends SubscriptionConnection {
+  }
+  capture(Mocked.prototype, 'handleConnectionClose')
+  // eslint-disable-next-line no-new
+  new Mocked(socket, {})
+  socket.emit('error')
+  t.equal(Mocked.prototype.handleConnectionClose.calls.length, 1)
+})
+
+test('subscription connection should close socket when close called', async (t) => {
+  const socket = new EventEmitter()
+  socket.protocol = GRAPHQL_TRANSPORT_WS
+  socket.send = () => {}
+  socket.close = () => {}
+  capture(socket, 'close')
+  const sc = new SubscriptionConnection(socket, {})
+  sc.close()
+  t.equal(socket.close.calls.length, 1)
 })
 
 test('subscription connection sends error message when message is not json string', async (t) => {
