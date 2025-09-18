@@ -128,6 +128,7 @@ const mercurius = fp(async function (app, opts) {
   let onDisconnect
   let keepAlive
   let fullWsTransport
+  let wsPath
 
   if (typeof subscriptionOpts === 'object') {
     if (subscriptionOpts.pubsub) {
@@ -142,6 +143,7 @@ const mercurius = fp(async function (app, opts) {
     onDisconnect = subscriptionOpts.onDisconnect
     keepAlive = subscriptionOpts.keepAlive
     fullWsTransport = subscriptionOpts.fullWsTransport
+    wsPath = subscriptionOpts.path
   } else if (subscriptionOpts === true) {
     emitter = mq()
     subscriber = new PubSub(emitter)
@@ -212,6 +214,7 @@ const mercurius = fp(async function (app, opts) {
       subscriptionContextFn,
       keepAlive,
       fullWsTransport,
+      wsPath,
       additionalRouteOptions: opts.additionalRouteOptions
     })
   }
